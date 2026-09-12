@@ -1,0 +1,230 @@
+<div class="planning-page">
+  <header class="planning-header">
+    <div class="header-left">
+      <h1><mat-icon>calendar_month</mat-icon> Planning des interventions</h1>
+      <p class="header-sub" *ngIf="isAgentOnly">Votre emploi du temps personnel</p>
+      <p class="header-sub" *ngIf="isManager && !isAgentOnly">Gestion des interventions de votre département</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-today" (click)="goToThisWeek()">Aujourd'hui</button>
+      <button class="btn-primary" *ngIf="isManager && !isAgentOnly" (click)="showForm = !showForm">
+        <mat-icon>add</mat-icon> Nouvelle Intervention
+      </button>
+    </div>
+  </header>
+
+  <div class="success-banner" *ngIf="formSuccess">
+    <mat-icon>check_circle</mat-icon> {{ formSuccess }}
+  </div>
+
+  <div class="week-nav">
+    <button mat-icon-button (click)="prevWeek()"><mat-icon>chevron_left</mat-icon></button>
+    <span class="week-label">Semaine du {{ weekDays[0] | date:'dd MMM' }} — {{ weekDays[6] | date:'dd MMM yyyy' }}</span>
+    <button mat-icon-button (click)="nextWeek()"><mat-icon>chevron_right</mat-icon></button>
+    <select class="agent-filter" *ngIf="isManager && !isAgentOnly" [(ngModel)]="agentFilter" (change)="onAgentFilterChange()">
+      <option [ngValue]="null">Tous les agents</option>
+      <option *ngFor="let a of agents" [ngValue]="a.userId">{{ a.userName }}</option>
+    </select>
+  </div>
+
+  <div class="tabs">
+    <button [class.active]="activeTab === 'calendar'" (click)="switchTab('calendar')">
+      <mat-icon>calendar_view_week</mat-icon> Calendrier
+    </button>
+    <button [class.active]="activeTab === 'completed'" (click)="switchTab('completed')" *ngIf="isManager && !isAgentOnly">
+      <mat-icon>task_alt</mat-icon> Terminés
+    </button>
+    <button [class.active]="activeTab === 'stats'" (click)="switchTab('stats')">
+      <mat-icon>bar_chart</mat-icon> Statistiques
+    </button>
+  </div>
+
+  <div class="week-stats" *ngIf="overview && activeTab === 'calendar'">
+    <div class="ws-item"><span class="ws-val">{{ overview.totalPlans }}</span><span class="ws-lbl">Total</span></div>
+    <div class="ws-item planned"><span class="ws-val">{{ overview.planned }}</span><span class="ws-lbl">Planifiés</span></div>
+    <div class="ws-item progress"><span class="ws-val">{{ overview.inProgress }}</span><span class="ws-lbl">En cours</span></div>
+    <div class="ws-item completed"><span class="ws-val">{{ overview.completed }}</span><span class="ws-lbl">Terminés</span></div>
+    <div class="ws-item validated"><span class="ws-val">{{ overview.validated }}</span><span class="ws-lbl">Validés</span></div>
+    <div class="ws-item cancelled"><span class="ws-val">{{ overview.cancelled }}</span><span class="ws-lbl">Annulés</span></div>
+  </div>
+
+  <div class="calendar-grid" *ngIf="activeTab === 'calendar'">
+    <div class="day-column" *ngFor="let day of weekDays" [class.today]="isToday(day)">
+      <div class="day-header" [class.today-header]="isToday(day)">
+        <span class="day-name">{{ getDayName(day) }}</span>
+        <span class="day-date">{{ formatDate(day) }}</span>
+      </div>
+      <div class="day-plans">
+        <div class="plan-card" *ngFor="let plan of getPlansForDay(day)" (click)="openPlanDetail(plan)">
+          <div class="plan-time">{{ plan.timeSlot }}</div>
+          <div class="plan-title">{{ plan.reportTitle }}</div>
+          <div class="plan-agent">{{ plan.agentName }}</div>
+          <span class="plan-status" [ngClass]="getStatusClass(plan.status)">{{ getStatusLabel(plan.status) }}</span>
+        </div>
+        <div class="empty-day" *ngIf="getPlansForDay(day).length === 0">
+          <span>Aucune intervention</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="completed-section" *ngIf="activeTab === 'completed'">
+    <h2>Plans terminés en attente de validation</h2>
+    <div class="completed-list" *ngIf="completedPlans.length > 0; else noCompleted">
+      <div class="completed-card" *ngFor="let plan of completedPlans">
+        <div class="cc-left">
+          <div class="cc-title">{{ plan.reportTitle }}</div>
+          <div class="cc-meta">
+            <span><mat-icon>person</mat-icon> {{ plan.agentName }}</span>
+            <span><mat-icon>schedule</mat-icon> {{ plan.timeSlot }}</span>
+            <span *ngIf="plan.reportAddress"><mat-icon>location_on</mat-icon> {{ plan.reportAddress }}</span>
+          </div>
+          <div class="cc-meta">
+            <span *ngIf="plan.duration"><mat-icon>timer</mat-icon> Durée: {{ plan.duration }}</span>
+            <span *ngIf="plan.slaRespected !== undefined" [class.sla-ok]="plan.slaRespected" [class.sla-ko]="!plan.slaRespected">
+              <mat-icon>{{ plan.slaRespected ? 'check_circle' : 'warning' }}</mat-icon>
+              SLA {{ plan.slaRespected ? 'respecté' : 'dépassé' }}
+            </span>
+          </div>
+        </div>
+        <div class="cc-right">
+          <button class="btn-success" (click)="validatePlan(plan)">
+            <mat-icon>task_alt</mat-icon> Valider
+          </button>
+          <button class="btn-cancel" (click)="rejectPlan(plan)">
+            <mat-icon>close</mat-icon> Rejeter
+          </button>
+        </div>
+      </div>
+    </div>
+    <ng-template #noCompleted>
+      <div class="empty-state">
+        <mat-icon>task_alt</mat-icon>
+        <p>Aucun plan terminé en attente de validation</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <div class="stats-section" *ngIf="activeTab === 'stats' && planningStats">
+    <div class="stats-header">
+      <h2>Statistiques — Semaine du {{ planningStats.weekStart }}</h2>
+    </div>
+    <div class="stats-summary">
+      <div class="stat-box">
+        <span class="stat-num">{{ planningStats.totalPlans }}</span>
+        <span class="stat-lbl">Total interventions</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num rate">{{ planningStats.completionRate }}%</span>
+        <span class="stat-lbl">Taux de complétion</span>
+      </div>
+    </div>
+    <div class="agent-stats-grid">
+      <div class="agent-stat-card" *ngFor="let agent of planningStats.perAgent">
+        <div class="asc-header">
+          <div class="asc-avatar">{{ agent.agentName?.charAt(0) }}</div>
+          <h3>{{ agent.agentName }}</h3>
+        </div>
+        <div class="asc-stats">
+          <div class="asc-stat"><span class="num">{{ agent.total }}</span><span class="lbl">Total</span></div>
+          <div class="asc-stat"><span class="num planned">{{ agent.planned }}</span><span class="lbl">Planifiés</span></div>
+          <div class="asc-stat"><span class="num progress">{{ agent.inProgress }}</span><span class="lbl">En cours</span></div>
+          <div class="asc-stat"><span class="num completed">{{ agent.completed }}</span><span class="lbl">Terminés</span></div>
+          <div class="asc-stat"><span class="num validated">{{ agent.validated }}</span><span class="lbl">Validés</span></div>
+        </div>
+        <div class="asc-bar">
+          <div class="asc-fill" [style.width]="agent.total > 0 ? ((agent.completed + agent.validated) * 100 / agent.total) + '%' : '0%'"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" *ngIf="selectedPlan" (click)="selectedPlan = null">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ selectedPlan.reportTitle }}</h3>
+        <button mat-icon-button (click)="selectedPlan = null"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-row"><label>Agent</label><span>{{ selectedPlan.agentName }}</span></div>
+        <div class="info-row"><label>Date</label><span>{{ selectedPlan.plannedDate | date:'dd/MM/yyyy HH:mm' }}</span></div>
+        <div class="info-row"><label>Créneau</label><span>{{ selectedPlan.timeSlot }}</span></div>
+        <div class="info-row"><label>Statut</label><span [ngClass]="getStatusClass(selectedPlan.status)">{{ getStatusLabel(selectedPlan.status) }}</span></div>
+        <div class="info-row" *ngIf="selectedPlan.notes"><label>Notes</label><span>{{ selectedPlan.notes }}</span></div>
+      </div>
+      <div class="modal-actions">
+        <button *ngIf="selectedPlan.status === 'PLANNED'" class="btn-primary" (click)="updatePlanStatus(selectedPlan, 'IN_PROGRESS')">
+          <mat-icon>play_arrow</mat-icon> Démarrer
+        </button>
+        <button *ngIf="selectedPlan.status === 'IN_PROGRESS'" class="btn-success" (click)="updatePlanStatus(selectedPlan, 'COMPLETED')">
+          <mat-icon>check_circle</mat-icon> Terminer
+        </button>
+        <button *ngIf="selectedPlan.status !== 'CANCELLED' && selectedPlan.status !== 'VALIDATED'" class="btn-cancel" (click)="updatePlanStatus(selectedPlan, 'CANCELLED')">
+          <mat-icon>cancel</mat-icon> Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="create-form-overlay" *ngIf="showForm" (click)="showForm = false">
+    <div class="create-form" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h2><mat-icon>add_circle</mat-icon> Nouvelle Intervention</h2>
+        <button mat-icon-button (click)="showForm = false"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <div class="conflict-alert" *ngIf="conflictError">
+        <mat-icon>warning</mat-icon>
+        <div>
+          <strong>Conflit détecté</strong>
+          <p>{{ conflictError }}</p>
+        </div>
+      </div>
+
+      <div class="form-body">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Signalement</mat-label>
+          <mat-select [(ngModel)]="form.reportId">
+            <mat-option *ngFor="let r of unassignedReports" [value]="r.id">
+              {{ r.title }} — {{ r.categoryName }} ({{ r.priority }})
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Agent assigné</mat-label>
+          <mat-select [(ngModel)]="form.agentId">
+            <mat-option *ngFor="let a of agents" [value]="a.userId">
+              {{ a.userName }} — {{ a.zone || 'Sans zone' }} ({{ a.interventionsCount || 0 }} interventions)
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput type="date" [(ngModel)]="form.plannedDate">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Créneau</mat-label>
+            <mat-select [(ngModel)]="form.timeSlot">
+              <mat-option *ngFor="let slot of timeSlots" [value]="slot">{{ slot }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Notes</mat-label>
+          <textarea matInput [(ngModel)]="form.notes" rows="3" placeholder="Matériel nécessaire, instructions..."></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-button (click)="showForm = false">Annuler</button>
+        <button class="btn-primary" (click)="createPlan()" [disabled]="!form.reportId || !form.agentId || !form.plannedDate">
+          <mat-icon>add</mat-icon> Créer le plan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

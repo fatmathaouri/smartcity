@@ -1,0 +1,24 @@
+<div class="map-picker-container">
+  <div class="address-search">
+    <mat-icon>search</mat-icon>
+    <input
+      matInput
+      [value]="address"
+      (input)="onAddressInput($any($event.target).value)"
+      placeholder="Rechercher une adresse à Tunis..."
+      autocomplete="off"
+    />
+    <span class="coords" *ngIf="latitude && longitude">
+      📍 {{ latitude }}, {{ longitude }}
+    </span>
+  </div>
+
+  <div class="map-wrapper">
+    <div id="map-picker" class="map-element"></div>
+  </div>
+
+  <div class="map-hint">
+    <mat-icon>touch_app</mat-icon>
+    <span>Cliquez sur la carte pour sélectionner l'emplacement du signalement</span>
+  </div>
+</div>

@@ -1,0 +1,35 @@
+<div class="page-container">
+  <h1>Dashboard Municipal</h1>
+
+  <div class="stats-grid" *ngIf="stats">
+    <mat-card class="stat-card">
+      <div class="stat-value" style="color: #1565c0;">{{ stats.totalReports }}</div>
+      <div class="stat-label">Total signalements</div>
+    </mat-card>
+    <mat-card class="stat-card">
+      <div class="stat-value" style="color: #fb8c00;">{{ stats.pendingReports }}</div>
+      <div class="stat-label">En attente</div>
+    </mat-card>
+    <mat-card class="stat-card">
+      <div class="stat-value" style="color: #1565c0;">{{ stats.inProgressReports }}</div>
+      <div class="stat-label">En cours</div>
+    </mat-card>
+    <mat-card class="stat-card">
+      <div class="stat-value" style="color: #43a047;">{{ stats.resolvedReports }}</div>
+      <div class="stat-label">Résolus</div>
+    </mat-card>
+  </div>
+
+  <div class="predictions-section" *ngIf="stats && stats.predictions && stats.predictions.length">
+    <h2><mat-icon>auto_graph</mat-icon> Prédictions IA — Zones à risque</h2>
+    <mat-card class="prediction-card" *ngFor="let p of stats.predictions">
+      <mat-card-content>
+        <div class="zone-name">
+          {{ p.zoneName }}
+          <span class="increase">+{{ p.incidentIncrease }}%</span>
+        </div>
+        <p>{{ p.recommendation }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

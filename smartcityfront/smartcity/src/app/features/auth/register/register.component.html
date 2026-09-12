@@ -1,0 +1,63 @@
+<div class="register-page">
+  <mat-card class="register-card">
+    <div class="logo-section">
+      <div class="icon">
+        <mat-icon>location_city</mat-icon>
+      </div>
+      <h1>Créer un compte</h1>
+      <p>Rejoignez SmartCity et participez à l'amélioration de votre ville</p>
+    </div>
+
+    <form (ngSubmit)="register()">
+      <div class="error-message" *ngIf="error">
+        <mat-icon>error_outline</mat-icon>
+        {{ error }}
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Prénom</mat-label>
+          <input matInput [(ngModel)]="request.firstName" name="firstName" required autocomplete="off">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Nom</mat-label>
+          <input matInput [(ngModel)]="request.lastName" name="lastName" required autocomplete="off">
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [(ngModel)]="request.email" name="email" required autocomplete="off">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mot de passe</mat-label>
+        <input matInput type="password" [(ngModel)]="request.password" name="password" required autocomplete="new-password">
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Téléphone</mat-label>
+          <input matInput [(ngModel)]="request.phone" name="phone" autocomplete="off">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Ville</mat-label>
+          <input matInput [(ngModel)]="request.city" name="city" autocomplete="off">
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Adresse</mat-label>
+        <input matInput [(ngModel)]="request.address" name="address" autocomplete="off">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit" style="height:48px;font-size:16px;font-weight:600;">
+        S'inscrire
+      </button>
+
+      <div class="form-footer">
+        <a mat-button routerLink="/login">Déjà un compte ? Connectez-vous</a>
+      </div>
+    </form>
+  </mat-card>
+</div>

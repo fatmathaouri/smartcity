@@ -1,0 +1,178 @@
+<div class="admin-dashboard">
+  <h1>Administration</h1>
+
+  <div class="tab-bar">
+    <button [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">
+      <mat-icon>bar_chart</mat-icon> Statistiques
+    </button>
+    <button [class.active]="activeTab === 'users'" (click)="activeTab = 'users'">
+      <mat-icon>people</mat-icon> Utilisateurs
+    </button>
+    <button [class.active]="activeTab === 'categories'" (click)="activeTab = 'categories'">
+      <mat-icon>category</mat-icon> Catégories
+    </button>
+    <button [class.active]="activeTab === 'heatmap'" (click)="activeTab = 'heatmap'">
+      <mat-icon>local_fire_department</mat-icon> Carte thermique
+    </button>
+    <button [class.active]="activeTab === 'sla'" (click)="activeTab = 'sla'">
+      <mat-icon>timer</mat-icon> SLA
+    </button>
+    <button [class.active]="activeTab === 'departments'" (click)="activeTab = 'departments'">
+      <mat-icon>domain</mat-icon> Départements
+    </button>
+  </div>
+
+  <!-- STATS TAB -->
+  <div *ngIf="activeTab === 'stats' && stats" class="tab-content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <mat-icon>report_problem</mat-icon>
+        <div class="stat-value">{{ stats.totalReports }}</div>
+        <div class="stat-label">Total incidents</div>
+      </div>
+      <div class="stat-card pending">
+        <mat-icon>schedule</mat-icon>
+        <div class="stat-value">{{ stats.pending }}</div>
+        <div class="stat-label">En attente</div>
+      </div>
+      <div class="stat-card progress">
+        <mat-icon>autorenew</mat-icon>
+        <div class="stat-value">{{ stats.inProgress }}</div>
+        <div class="stat-label">En cours</div>
+      </div>
+      <div class="stat-card resolved">
+        <mat-icon>check_circle</mat-icon>
+        <div class="stat-value">{{ stats.resolved }}</div>
+        <div class="stat-label">Résolus</div>
+      </div>
+      <div class="stat-card users">
+        <mat-icon>group</mat-icon>
+        <div class="stat-value">{{ stats.totalUsers }}</div>
+        <div class="stat-label">Utilisateurs</div>
+      </div>
+      <div class="stat-card rate">
+        <mat-icon>trending_up</mat-icon>
+        <div class="stat-value">{{ stats.resolutionRate }}%</div>
+        <div class="stat-label">Taux résolution</div>
+      </div>
+    </div>
+
+    <h3>Répartition par catégorie</h3>
+    <div class="category-bars">
+      <div class="cat-bar" *ngFor="let entry of stats.reportsByCategory | keyvalue">
+        <span class="cat-name">{{ entry.key }}</span>
+        <div class="bar-track">
+          <div class="bar-fill" [style.width]="($any(entry.value) * 100 / stats.totalReports) + '%'"></div>
+        </div>
+        <span class="cat-count">{{ $any(entry.value) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div *ngIf="activeTab === 'users'" class="tab-content">
+    <app-user-management></app-user-management>
+  </div>
+
+  <!-- CATEGORIES TAB -->
+  <div *ngIf="activeTab === 'categories'" class="tab-content">
+    <app-category-management></app-category-management>
+  </div>
+
+  <!-- HEATMAP TAB -->
+  <div *ngIf="activeTab === 'heatmap'" class="tab-content">
+    <h3>Carte thermique des zones à risque</h3>
+    <p class="subtitle">Zones classées par nombre de signalements</p>
+    <div class="heatmap-list">
+      <div class="heat-row" *ngFor="let zone of heatmap">
+        <span class="zone-name">{{ zone.zone }}</span>
+        <div class="heat-track">
+          <div class="heat-fill" [style.width]="getHeatWidth(zone.count) + '%'"
+               [style.background]="getHeatColor(zone.count)"></div>
+        </div>
+        <span class="heat-count">{{ zone.count }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLA TAB -->
+  <div *ngIf="activeTab === 'sla' && slaStats" class="tab-content">
+    <h3>Conformité SLA</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <mat-icon>timer</mat-icon>
+        <div class="stat-value">{{ slaStats.totalActive }}</div>
+        <div class="stat-label">Signalements actifs</div>
+      </div>
+      <div class="stat-card resolved">
+        <mat-icon>check_circle</mat-icon>
+        <div class="stat-value">{{ slaStats.onTime }}</div>
+        <div class="stat-label">Dans les temps</div>
+      </div>
+      <div class="stat-card pending">
+        <mat-icon>warning</mat-icon>
+        <div class="stat-value">{{ slaStats.breached }}</div>
+        <div class="stat-label">En retard</div>
+      </div>
+      <div class="stat-card">
+        <mat-icon>trending_up</mat-icon>
+        <div class="stat-value">{{ slaStats.complianceRate }}%</div>
+        <div class="stat-label">Taux de conformité</div>
+      </div>
+    </div>
+
+    <h3>Détail par catégorie</h3>
+    <div class="category-bars" *ngIf="slaStats.byCategory">
+      <div class="cat-bar" *ngFor="let cat of slaStats.byCategory">
+        <span class="cat-name">{{ cat.categoryName }} <small>(SLA: {{ cat.slaHours }}h)</small></span>
+        <div class="bar-track">
+          <div class="bar-fill" [style.width]="cat.complianceRate + '%'"
+               [style.background]="cat.complianceRate > 70 ? '#4caf50' : cat.complianceRate > 40 ? '#ff9800' : '#f44336'"></div>
+        </div>
+        <span class="cat-count">{{ cat.complianceRate }}% — {{ cat.breached }} retard(s)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPARTMENTS TAB -->
+  <div *ngIf="activeTab === 'departments'" class="tab-content">
+    <h3>Gestion des départements</h3>
+
+    <div class="create-dept-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Nom du département</mat-label>
+        <input matInput [(ngModel)]="newDept.name" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <input matInput [(ngModel)]="newDept.description" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Catégorie</mat-label>
+        <mat-select [(ngModel)]="newDept.categoryId">
+          <mat-option [value]="0">Aucune</mat-option>
+          <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="createDepartment()">
+        <mat-icon>add</mat-icon> Créer
+      </button>
+    </div>
+
+    <div class="dept-list">
+      <div class="dept-row" *ngFor="let dept of departments">
+        <div class="dept-info">
+          <strong>{{ dept.name }}</strong>
+          <span>{{ dept.description }}</span>
+          <small *ngIf="dept.categoryName">Catégorie: {{ dept.categoryName }}</small>
+        </div>
+        <div class="dept-meta">
+          <span class="agent-count">{{ dept.agentCount }} agent(s)</span>
+          <button mat-icon-button color="warn" (click)="deleteDepartment(dept.id)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

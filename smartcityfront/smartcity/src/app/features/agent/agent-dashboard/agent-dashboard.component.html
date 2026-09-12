@@ -1,0 +1,198 @@
+<div class="agent-dashboard">
+  <header class="dash-header">
+    <div class="header-left">
+      <h1>Mes Interventions</h1>
+      <p *ngIf="profile">{{ profile.service }} — {{ profile.zone }}</p>
+    </div>
+    <div class="header-right">
+      <div class="dispo-toggle" [class.disponible]="profile?.disponible" (click)="toggleDispo()">
+        <span class="dispo-dot"></span>
+        {{ profile?.disponible ? 'Disponible' : 'Indisponible' }}
+      </div>
+    </div>
+  </header>
+
+  <div class="stats-row" *ngIf="performance">
+    <div class="stat-card">
+      <div class="stat-value">{{ performance.totalAssigned }}</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value pending">{{ performance.pending }}</div>
+      <div class="stat-label">En attente</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value progress">{{ performance.inProgress }}</div>
+      <div class="stat-label">En cours</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value resolved">{{ performance.resolved }}</div>
+      <div class="stat-label">Résolus</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value rate">{{ performance.resolutionRate }}%</div>
+      <div class="stat-label">Taux</div>
+    </div>
+  </div>
+
+  <div class="dash-tabs">
+    <button [class.active]="$any(activeDashTab) === 'tasks'" (click)="switchDashTab('tasks')">
+      <mat-icon>assignment</mat-icon> Tâches
+    </button>
+    <button [class.active]="$any(activeDashTab) === 'planning'" (click)="switchDashTab('planning')">
+      <mat-icon>calendar_month</mat-icon> Mon Planning
+    </button>
+  </div>
+
+  <div *ngIf="$any(activeDashTab) === 'tasks'">
+    <div class="filter-bar">
+      <button [class.active]="activeFilter === 'all'" (click)="filterTasks('all')">Tous</button>
+      <button [class.active]="activeFilter === 'NEW'" (click)="filterTasks('NEW')">Nouveaux</button>
+      <button [class.active]="activeFilter === 'ACCEPTED'" (click)="filterTasks('ACCEPTED')">Acceptés</button>
+      <button [class.active]="activeFilter === 'IN_PROGRESS'" (click)="filterTasks('IN_PROGRESS')">En cours</button>
+      <button [class.active]="activeFilter === 'RESOLVED'" (click)="filterTasks('RESOLVED')">Résolus</button>
+    </div>
+
+  <div class="tasks-list" *ngIf="!loading">
+    <div class="task-card" *ngFor="let task of filteredTasks" (click)="selectTask(task)">
+      <div class="task-status-bar" [ngClass]="getStatusClass(task.treatmentStatus)"></div>
+      <div class="task-content">
+        <div class="task-header">
+          <h3>{{ task.title }}</h3>
+          <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">{{ task.priority }}</span>
+        </div>
+        <p class="task-desc">{{ task.description }}</p>
+        <div class="task-meta">
+          <span><mat-icon>category</mat-icon> {{ task.categoryName }}</span>
+          <span><mat-icon>location_on</mat-icon> {{ task.address }}</span>
+          <span><mat-icon>schedule</mat-icon> {{ task.createdAt | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="task-status-label">{{ getStatusLabel(task.treatmentStatus) }}</div>
+      </div>
+    </div>
+    <div class="empty-state" *ngIf="filteredTasks.length === 0">
+      <mat-icon>assignment</mat-icon>
+      <p>Aucune tâche pour ce filtre</p>
+    </div>
+  </div>
+
+  <div class="task-modal" *ngIf="selectedTask" (click)="selectedTask = null">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ selectedTask.title }}</h2>
+        <button mat-icon-button (click)="selectedTask = null"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="modal-body">
+        <p>{{ selectedTask.description }}</p>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Catégorie</label>
+            <span>{{ selectedTask.categoryName }}</span>
+          </div>
+          <div class="info-item">
+            <label>Priorité</label>
+            <span [ngClass]="getPriorityClass(selectedTask.priority)">{{ selectedTask.priority }}</span>
+          </div>
+          <div class="info-item">
+            <label>Adresse</label>
+            <span>{{ selectedTask.address }}</span>
+          </div>
+          <div class="info-item">
+            <label>Statut</label>
+            <span>{{ getStatusLabel(selectedTask.treatmentStatus) }}</span>
+          </div>
+        </div>
+        <div class="intervention-section" *ngIf="selectedTask.treatmentStatus === 'ACCEPTED'">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Commentaire d'intervention</mat-label>
+            <textarea matInput [(ngModel)]="interventionComment" rows="3"></textarea>
+          </mat-form-field>
+          <div class="photo-upload-row">
+            <label class="file-label">
+              <mat-icon>add_a_photo</mat-icon> Photo avant
+              <input type="file" (change)="onPhotoBeforeSelected($event)" accept="image/*" hidden>
+            </label>
+            <span *ngIf="photoBeforeFile">{{ photoBeforeFile.name }}</span>
+          </div>
+          <div class="photo-upload-row">
+            <label class="file-label">
+              <mat-icon>add_a_photo</mat-icon> Photo après
+              <input type="file" (change)="onPhotoAfterSelected($event)" accept="image/*" hidden>
+            </label>
+            <span *ngIf="photoAfterFile">{{ photoAfterFile.name }}</span>
+          </div>
+        </div>
+
+        <div class="photo-upload-row" *ngIf="selectedTask.treatmentStatus === 'IN_PROGRESS'">
+          <label class="file-label">
+            <mat-icon>verified</mat-icon> Photo preuve (résolution)
+            <input type="file" (change)="onProofPhotoSelected($event)" accept="image/*" hidden>
+          </label>
+          <span *ngIf="proofPhotoFile">{{ proofPhotoFile.name }}</span>
+        </div>
+        <div class="info-grid" *ngIf="selectedTask.agentComment">
+          <div class="info-item full-width">
+            <label>Commentaire agent</label>
+            <span>{{ selectedTask.agentComment }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button *ngIf="selectedTask.treatmentStatus === 'NEW'" class="btn-primary" (click)="acceptTask(selectedTask)">
+          <mat-icon>check_circle</mat-icon> Accepter
+        </button>
+        <button *ngIf="selectedTask.treatmentStatus === 'ACCEPTED'" class="btn-primary" (click)="startIntervention(selectedTask)">
+          <mat-icon>play_arrow</mat-icon> Démarrer
+        </button>
+        <button *ngIf="selectedTask.treatmentStatus === 'IN_PROGRESS'" class="btn-success" (click)="resolveTask(selectedTask)">
+          <mat-icon>done_all</mat-icon> Résoudre
+        </button>
+        <a *ngIf="selectedTask.latitude && selectedTask.longitude"
+           [href]="'https://www.openstreetmap.org/?mlat=' + selectedTask.latitude + '&mlon=' + selectedTask.longitude"
+           target="_blank" class="btn-outline">
+          <mat-icon>directions</mat-icon> Itinéraire
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="$any(activeDashTab) === 'planning'" class="planning-section">
+    <div class="planning-today" *ngIf="todayPlans.length > 0">
+      <h2><mat-icon>wb_sunny</mat-icon> Aujourd'hui</h2>
+      <div class="plan-cards">
+        <div class="plan-card" *ngFor="let plan of todayPlans">
+          <div class="plan-time-badge">{{ plan.timeSlot }}</div>
+          <div class="plan-info">
+            <h3>{{ plan.reportTitle }}</h3>
+            <p *ngIf="plan.notes">{{ plan.notes }}</p>
+            <span class="plan-status" [ngClass]="getPlanStatusClass(plan.status)">{{ getPlanStatusLabel(plan.status) }}</span>
+          </div>
+          <div class="plan-actions">
+            <button *ngIf="plan.status === 'PLANNED'" class="btn-primary" (click)="startPlan(plan)">
+              <mat-icon>play_arrow</mat-icon> Commencer
+            </button>
+            <button *ngIf="plan.status === 'IN_PROGRESS'" class="btn-success" (click)="completePlan(plan)">
+              <mat-icon>check_circle</mat-icon> Terminer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="planning-upcoming">
+      <h2><mat-icon>event</mat-icon> À venir</h2>
+      <div class="plan-cards" *ngIf="upcomingPlans.length > 0; else noUpcoming">
+        <div class="plan-card" *ngFor="let plan of upcomingPlans">
+          <div class="plan-time-badge">{{ plan.plannedDate | date:'dd MMM' }} {{ plan.timeSlot }}</div>
+          <div class="plan-info">
+            <h3>{{ plan.reportTitle }}</h3>
+            <p *ngIf="plan.notes">{{ plan.notes }}</p>
+          </div>
+        </div>
+      </div>
+      <ng-template #noUpcoming>
+        <p class="empty-planning">Aucune intervention planifiée</p>
+      </ng-template>
+    </div>
+  </div>
+</div>

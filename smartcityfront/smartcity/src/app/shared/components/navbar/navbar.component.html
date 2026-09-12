@@ -1,0 +1,50 @@
+<mat-toolbar class="navbar" color="primary" *ngIf="!isHome">
+  <a mat-button routerLink="/" class="brand">
+    <mat-icon>location_city</mat-icon>
+    SmartCity
+  </a>
+
+  <ng-container *ngIf="authService.isLoggedIn()">
+    <div class="nav-links">
+      <a mat-button routerLink="/reports" routerLinkActive="active">
+        <mat-icon>list</mat-icon> <span>Signalements</span>
+      </a>
+      <a mat-button routerLink="/map" routerLinkActive="active">
+        <mat-icon>map</mat-icon> <span>Carte</span>
+      </a>
+      <a mat-button routerLink="/notifications" routerLinkActive="active">
+        <mat-icon>notifications</mat-icon> <span>Notifications</span>
+        <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </a>
+      <a mat-button routerLink="/agent" routerLinkActive="active" *ngIf="isAgent">
+        <mat-icon>construction</mat-icon> <span>Mes tâches</span>
+      </a>
+      <a mat-button routerLink="/planning" routerLinkActive="active" *ngIf="isAgent || isManager">
+        <mat-icon>calendar_month</mat-icon> <span>Planning</span>
+      </a>
+      <a mat-button routerLink="/manager" routerLinkActive="active" *ngIf="isManager">
+        <mat-icon>supervisor_account</mat-icon> <span>Manager</span>
+      </a>
+      <a mat-button routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin">
+        <mat-icon>admin_panel_settings</mat-icon> <span>Admin</span>
+      </a>
+    </div>
+
+    <span class="spacer"></span>
+
+    <div class="user-section">
+      <span class="user-name">{{ user?.firstName }} {{ user?.lastName }}</span>
+      <button mat-button class="btn-logout" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!authService.isLoggedIn()">
+    <span class="spacer"></span>
+    <div class="nav-links">
+      <a mat-button routerLink="/login">Connexion</a>
+      <a mat-button routerLink="/register">Inscription</a>
+    </div>
+  </ng-container>
+</mat-toolbar>

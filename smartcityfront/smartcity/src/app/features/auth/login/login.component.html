@@ -1,0 +1,37 @@
+<div class="login-page">
+  <mat-card class="login-card">
+    <div class="logo-section">
+      <div class="icon">
+        <mat-icon>location_city</mat-icon>
+      </div>
+      <h1>SmartCity</h1>
+      <p>Connectez-vous à votre espace citoyen</p>
+    </div>
+
+    <form (ngSubmit)="login()">
+      <div class="error-message" *ngIf="error">
+        <mat-icon>error_outline</mat-icon>
+        {{ error }}
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [(ngModel)]="request.email" name="email" required placeholder="exemple@email.com" autocomplete="off">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mot de passe</mat-label>
+        <input matInput type="password" [(ngModel)]="request.password" name="password" required placeholder="Votre mot de passe" autocomplete="new-password">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit" style="height:48px;font-size:16px;font-weight:600;">
+        Se connecter
+      </button>
+
+      <div class="form-footer">
+        <a mat-button routerLink="/">← Retour à l'accueil</a>
+        <a mat-button routerLink="/register">Pas encore de compte ? Inscrivez-vous</a>
+      </div>
+    </form>
+  </mat-card>
+</div>

@@ -1,0 +1,73 @@
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <mat-icon>auto_awesome</mat-icon>
+      Ville intelligente propulsée par l'IA
+    </div>
+    <h1>
+      Construisons<br>
+      une ville <span class="highlight">plus intelligente</span>
+    </h1>
+    <p>
+      Signalez les problèmes urbains, suivez leur résolution en temps réel
+      et contribuez à l'amélioration de votre ville grâce à la puissance de l'IA.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-primary" (click)="navigateTo('/register')">
+        <mat-icon>how_to_reg</mat-icon> Commencer
+      </button>
+      <button class="btn-secondary" (click)="navigateTo('/login')">
+        <mat-icon>login</mat-icon> Se connecter
+      </button>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <span>Découvrir</span>
+    <mat-icon>keyboard_arrow_down</mat-icon>
+  </div>
+</div>
+
+<section class="features-section" id="features">
+  <div class="section-header">
+    <h2>Une plateforme complète</h2>
+    <p>Des outils modernes pour une gestion municipale efficace et transparente.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card" *ngFor="let f of features">
+      <div class="icon-wrapper">
+        <mat-icon>{{ f.icon }}</mat-icon>
+      </div>
+      <h3>{{ f.title }}</h3>
+      <p>{{ f.desc }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-item" *ngFor="let s of stats">
+      <div class="stat-value">{{ s.value }}</div>
+      <div class="stat-label">{{ s.label }}</div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <h2>Prêt à faire la différence ?</h2>
+  <p>Rejoignez les citoyens qui participent activement à l'amélioration de leur cadre de vie.</p>
+  <div class="cta-actions">
+    <button class="btn-primary" (click)="navigateTo('/register')">
+      <mat-icon>how_to_reg</mat-icon> Créer un compte
+    </button>
+    <button class="btn-secondary" style="color:var(--primary);border-color:var(--primary);background:transparent;" (click)="navigateTo('/login')">
+      <mat-icon>login</mat-icon> Se connecter
+    </button>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand">
+    <mat-icon>location_city</mat-icon> SmartCity
+  </div>
+  &copy; 2026 SmartCity. Tous droits réservés.
+</footer>

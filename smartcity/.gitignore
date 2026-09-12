@@ -1,0 +1,23 @@
+# Spring Boot
+target/
+uploads/
+*.class
+*.log
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.project
+.classpath
+.settings/
+*.launch
+*.sublime-workspace
+.c9/
+
+# OS
+.DS_Store
+Thumbs.db

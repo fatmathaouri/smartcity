@@ -1,0 +1,54 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>
+        Signalements
+        <small>Suivez et gérez les signalements de votre ville</small>
+      </h1>
+    </div>
+    <div class="filter-section">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Filtrer par statut</mat-label>
+        <mat-select [(value)]="filterStatus">
+          <mat-option value="">Tous</mat-option>
+          <mat-option value="PENDING">En attente</mat-option>
+          <mat-option value="IN_PROGRESS">En cours</mat-option>
+          <mat-option value="RESOLVED">Résolu</mat-option>
+          <mat-option value="REJECTED">Rejeté</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button color="primary" routerLink="/reports/new" style="height:56px;">
+        <mat-icon>add</mat-icon> Nouveau signalement
+      </button>
+    </div>
+  </div>
+
+  <div class="reports-grid">
+    <mat-card class="report-card status-{{ report.status }}" *ngFor="let report of filteredReports" [routerLink]="['/reports', report.id]">
+      <mat-card-header>
+        <mat-card-title>
+          <span class="status-badge {{ report.status }}">
+            {{ report.status === 'PENDING' ? 'En attente' : report.status === 'IN_PROGRESS' ? 'En cours' : report.status === 'RESOLVED' ? 'Résolu' : 'Rejeté' }}
+          </span>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <h3>{{ report.title }}</h3>
+        <p class="description">{{ report.description }}</p>
+        <div class="meta">
+          <span *ngIf="report.categoryName" class="category-tag">{{ report.categoryName }}</span>
+          <span class="date">
+            <mat-icon>schedule</mat-icon>
+            {{ report.createdAt | date:'dd MMM yyyy' }}
+          </span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="empty-state" *ngIf="filteredReports.length === 0">
+      <mat-icon>inbox</mat-icon>
+      <h3>Aucun signalement</h3>
+      <p>Il n'y a pas encore de signalement à afficher</p>
+    </div>
+  </div>
+</div>

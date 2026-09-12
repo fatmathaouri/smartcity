@@ -1,0 +1,38 @@
+<div class="page-container">
+  <h1>Carte interactive</h1>
+  <p class="subtitle">Visualisez tous les signalements sur la carte de la ville</p>
+
+  <div class="map-wrapper">
+    <div class="map-container">
+      <div *ngIf="reports.length > 0; else noReports">
+        <iframe
+          [src]="('https://www.openstreetmap.org/export/embed.html?bbox=-10%2C30%2C35%2C45&layer=mapnik&marker=' + reports[0].latitude + '%2C' + reports[0].longitude) | safeUrl"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <ng-template #noReports>
+        <div class="empty-state">
+          <mat-icon>map</mat-icon>
+          <h3>Aucun signalement géolocalisé</h3>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="reports-sidebar" *ngIf="reports.length > 0">
+    <div class="sidebar-header">
+      <mat-icon>push_pin</mat-icon>
+      Signalements sur la carte ({{ reports.length }})
+    </div>
+    <div class="marker-list">
+      <div class="marker-item" *ngFor="let r of reports">
+        <span class="marker-dot" [style.background]="r.status === 'RESOLVED' ? '#43a047' : r.status === 'IN_PROGRESS' ? '#1565c0' : r.status === 'PENDING' ? '#fb8c00' : '#e53935'"></span>
+        <div class="marker-info">
+          <div class="title">{{ r.title }}</div>
+          <div class="address">{{ r.address || 'Coordonnées: ' + r.latitude + ', ' + r.longitude }}</div>
+        </div>
+        <a [href]="'https://www.openstreetmap.org/?mlat=' + r.latitude + '&mlon=' + r.longitude" target="_blank">Voir sur la carte</a>
+      </div>
+    </div>
+  </div>
+</div>

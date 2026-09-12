@@ -1,0 +1,98 @@
+<div class="page-container">
+  <mat-card class="form-card">
+    <h1><mat-icon>add_circle_outline</mat-icon> Nouveau signalement</h1>
+
+    <form (ngSubmit)="createReport()">
+      <mat-form-field appearance="outline">
+        <mat-label>Titre</mat-label>
+        <input matInput [(ngModel)]="report.title" name="title" required placeholder="Ex: Fuite d'eau boulevard de la République" (input)="onDescriptionChange()">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="report.description" name="description" required placeholder="Décrivez le problème en détail..." (input)="onDescriptionChange()"></textarea>
+      </mat-form-field>
+
+      <div class="suggestion-box" *ngIf="classification">
+        <mat-icon>auto_awesome</mat-icon>
+        <span>
+          Suggestion IA : Catégorie
+          <span class="pill voirie">{{ classification.category }}</span> —
+          Priorité
+          <span class="pill high">{{ classification.priority === 'HIGH' ? 'Haute' : classification.priority === 'MEDIUM' ? 'Moyenne' : 'Basse' }}</span>
+        </span>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Catégorie</mat-label>
+        <mat-select [(ngModel)]="report.categoryId" name="categoryId">
+          <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="location-section">
+        <label class="section-label"><mat-icon>location_on</mat-icon> Emplacement</label>
+        <app-map-picker (locationSelected)="onLocationSelected($event)"></app-map-picker>
+      </div>
+
+      <div class="preview-card" *ngIf="showPreview">
+        <h3><mat-icon>visibility</mat-icon> Aperçu du signalement</h3>
+        <div class="preview-row">
+          <span class="preview-label">Titre</span>
+          <span class="preview-value">{{ report.title || '—' }}</span>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Description</span>
+          <span class="preview-value">{{ report.description || '—' }}</span>
+        </div>
+        <div class="preview-row" *ngIf="selectedCategoryName">
+          <span class="preview-label">Catégorie</span>
+          <span class="preview-value">{{ selectedCategoryName }}</span>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Adresse</span>
+          <span class="preview-value">{{ report.address || '— Cliquer sur la carte' }}</span>
+        </div>
+        <div class="preview-coords" *ngIf="report.latitude && report.longitude">
+          📍 {{ report.latitude }}, {{ report.longitude }}
+        </div>
+      </div>
+
+      <div class="media-section">
+        <h3><mat-icon>photo_library</mat-icon> Photos (max 5, 10MB chacune)</h3>
+        <div class="photo-upload-area" (click)="photoInput.click()">
+          <input type="file" #photoInput (change)="onFilesSelected($event)" accept="image/*" multiple hidden>
+          <mat-icon>add_photo_alternate</mat-icon>
+          <p>Ajouter des photos</p>
+        </div>
+        <div class="photo-previews" *ngIf="photoPreviews.length > 0">
+          <div class="preview-item" *ngFor="let preview of photoPreviews; let i = index">
+            <img [src]="preview" alt="Photo {{ i + 1 }}">
+            <button class="remove-btn" (click)="removePhoto(i); $event.stopPropagation()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="media-section">
+        <h3><mat-icon>videocam</mat-icon> Vidéo (max 30s, 30MB)</h3>
+        <div class="video-upload-area" (click)="videoInput.click()" *ngIf="!videoPreview">
+          <input type="file" #videoInput (change)="onVideoSelected($event)" accept="video/mp4,video/webm" hidden>
+          <mat-icon>videocam</mat-icon>
+          <p>Ajouter une vidéo</p>
+        </div>
+        <div class="video-preview" *ngIf="videoPreview">
+          <video [src]="videoPreview" controls></video>
+          <button class="remove-btn" (click)="removeVideo()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
+        <mat-icon>send</mat-icon> {{ isSubmitting ? 'Envoi en cours...' : 'Envoyer le signalement' }}
+      </button>
+    </form>
+  </mat-card>
+</div>

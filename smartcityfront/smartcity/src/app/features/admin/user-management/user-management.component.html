@@ -1,0 +1,141 @@
+<div class="user-management">
+  <div class="header-row">
+    <h2>Gestion des utilisateurs</h2>
+    <button mat-raised-button color="primary" (click)="showCreateForm = !showCreateForm">
+      <mat-icon>{{ showCreateForm ? 'close' : 'person_add' }}</mat-icon>
+      {{ showCreateForm ? 'Annuler' : 'Créer un utilisateur' }}
+    </button>
+  </div>
+
+  <div class="create-form" *ngIf="showCreateForm">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Créer un nouvel utilisateur</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Email *</mat-label>
+            <input matInput [(ngModel)]="newUser.email" type="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Prénom *</mat-label>
+            <input matInput [(ngModel)]="newUser.firstName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nom *</mat-label>
+            <input matInput [(ngModel)]="newUser.lastName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Téléphone</mat-label>
+            <input matInput [(ngModel)]="newUser.phone" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Rôle *</mat-label>
+            <mat-select [(ngModel)]="newUser.roleName">
+              <mat-option *ngFor="let r of roles" [value]="r">{{ getRoleLabel(r) }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" *ngIf="newUser.roleName === 'ROLE_MUNICIPAL_AGENT' || newUser.roleName === 'ROLE_DEPARTMENT_MANAGER'">
+            <mat-label>Département *</mat-label>
+            <mat-select [(ngModel)]="newUser.departmentId">
+              <mat-option *ngFor="let d of departmentsManagerStatus" [value]="d.id" [disabled]="d.hasManager && newUser.roleName === 'ROLE_DEPARTMENT_MANAGER'">
+                {{ d.name }} <span *ngIf="d.hasManager" style="color:#dc2626;margin-left:6px;font-size:12px">(occupé)</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-button (click)="resetCreateForm()">Annuler</button>
+        <button mat-raised-button color="primary" (click)="createUser()">
+          <mat-icon>check</mat-icon> Créer
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="search-bar">
+    <mat-icon>search</mat-icon>
+    <input type="text" [(ngModel)]="search" (input)="filterUsers()" placeholder="Rechercher un utilisateur...">
+  </div>
+
+  <div class="content-grid">
+    <div class="user-list">
+      <div class="user-row" *ngFor="let user of filteredUsers" [class.selected]="selectedUser?.id === user.id"
+           (click)="selectUser(user)">
+        <div class="user-avatar">{{ user.firstName?.charAt(0) }}{{ user.lastName?.charAt(0) }}</div>
+        <div class="user-info">
+          <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+          <span>{{ user.email }}</span>
+        </div>
+        <div class="user-roles">
+          <span *ngFor="let r of user.roles" class="role-chip" [ngClass]="getRoleClass(r)">
+            {{ getRoleLabel(r) }}
+          </span>
+        </div>
+        <div class="user-status" [class.disabled]="!user.enabled">
+          {{ user.enabled ? 'Actif' : 'Inactif' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="user-detail" *ngIf="selectedUser">
+      <h3>{{ selectedUser.firstName }} {{ selectedUser.lastName }}</h3>
+      <p class="email">{{ selectedUser.email }}</p>
+      <p class="phone" *ngIf="selectedUser.phone">{{ selectedUser.phone }}</p>
+
+      <div class="roles-section">
+        <h4>Rôles</h4>
+        <div class="current-roles">
+          <span *ngFor="let r of selectedUser.roles" class="role-tag" [ngClass]="getRoleClass(r)">
+            {{ getRoleLabel(r) }}
+            <button (click)="removeRole(r)">&times;</button>
+          </span>
+        </div>
+        <div class="add-role">
+          <select [(ngModel)]="newRole">
+            <option value="">Ajouter un rôle...</option>
+            <option *ngFor="let r of roles" [value]="r">{{ getRoleLabel(r) }}</option>
+          </select>
+          <button class="btn-sm" (click)="addRole(newRole)" [disabled]="!newRole">+</button>
+        </div>
+      </div>
+
+      <div class="reassign-section" *ngIf="selectedUser.roles?.includes('ROLE_DEPARTMENT_MANAGER')">
+        <h4>Réassigner le département</h4>
+        <div class="reassign-row">
+          <mat-form-field appearance="outline" class="reassign-select">
+            <mat-label>Nouveau département</mat-label>
+            <mat-select [(ngModel)]="reassignDepartmentId">
+              <mat-option *ngFor="let d of departmentsManagerStatus" [value]="d.id">
+                {{ d.name }} <span *ngIf="d.hasManager" style="color:#f59e0b;margin-left:6px;font-size:12px">(occupé — échange)</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-raised-button color="accent" (click)="reassignManager()" [disabled]="!reassignDepartmentId">
+            <mat-icon>swap_horiz</mat-icon> Réassigner
+          </button>
+        </div>
+        <p class="swap-hint" *ngIf="reassignDepartmentId && isDepartmentOccupied(reassignDepartmentId)">
+          <mat-icon>warning</mat-icon> Ce département a déjà un manager. Les deux managers seront échangés.
+        </p>
+      </div>
+
+      <div class="actions">
+        <button class="btn-reset" (click)="resetTempPassword(selectedUser.id)">
+          <mat-icon>vpn_key</mat-icon> Réinitialiser mot de passe
+        </button>
+        <button class="btn-toggle" (click)="toggleEnabled(selectedUser)">
+          {{ selectedUser.enabled ? 'Désactiver' : 'Activer' }}
+        </button>
+        <button class="btn-danger" (click)="deleteUser(selectedUser)">Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>

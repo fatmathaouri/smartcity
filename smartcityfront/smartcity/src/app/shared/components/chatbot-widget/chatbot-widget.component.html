@@ -1,0 +1,32 @@
+<ng-container *ngIf="authService.isLoggedIn()">
+<div class="chatbot-fab" (click)="toggle()" [class.open]="isOpen">
+  <mat-icon>{{ isOpen ? 'close' : 'chat' }}</mat-icon>
+</div>
+
+<div class="chatbot-panel" *ngIf="isOpen">
+  <div class="chat-header">
+    <mat-icon>smart_toy</mat-icon>
+    <span>Assistant SmartCity</span>
+  </div>
+
+  <div class="chat-messages">
+    <div *ngFor="let msg of messages" class="message" [class.user]="msg.isUser">
+      <div class="bubble">{{ msg.text }}</div>
+      <span class="time">{{ msg.time | date:'HH:mm' }}</span>
+    </div>
+    <div class="message loading" *ngIf="loading">
+      <div class="bubble typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <input type="text" [(ngModel)]="message" (keydown)="onKeydown($event)"
+           placeholder="Tapez votre message...">
+    <button (click)="send()" [disabled]="!message.trim() || loading">
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+</div>
+</ng-container>

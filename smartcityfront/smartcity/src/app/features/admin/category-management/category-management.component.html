@@ -1,0 +1,63 @@
+<div class="category-management">
+  <div class="header">
+    <h2>Gestion des catégories</h2>
+    <button class="btn-primary" (click)="openForm()">
+      <mat-icon>add</mat-icon> Nouvelle catégorie
+    </button>
+  </div>
+
+  <div class="categories-grid">
+    <div class="cat-card" *ngFor="let cat of categories">
+      <div class="cat-header">
+        <h3>{{ cat.name }}</h3>
+        <span class="priority-badge" [ngClass]="getPriorityClass(cat.defaultPriority)">
+          {{ getPriorityLabel(cat.defaultPriority) }}
+        </span>
+      </div>
+      <p>{{ cat.description }}</p>
+      <div class="cat-sla" *ngIf="cat.slaHours">
+        <span class="sla-info"><mat-icon>timer</mat-icon> SLA: {{ cat.slaHours }}h / Escalade: {{ cat.escalationHours }}h</span>
+      </div>
+      <div class="cat-actions">
+        <button class="btn-edit" (click)="openForm(cat)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button class="btn-delete" (click)="deleteCategory(cat.id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" *ngIf="showForm" (click)="cancel()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>{{ editingId ? 'Modifier' : 'Nouvelle' }} catégorie</h3>
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" [(ngModel)]="form.name" placeholder="Nom de la catégorie">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="form.description" placeholder="Description" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Priorité par défaut</label>
+        <select [(ngModel)]="form.priority">
+          <option *ngFor="let p of priorities" [value]="p">{{ getPriorityLabel(p) }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Délai SLA (heures)</label>
+        <input type="number" [(ngModel)]="form.slaHours" placeholder="168" min="1">
+      </div>
+      <div class="form-group">
+        <label>Heures d'escalade</label>
+        <input type="number" [(ngModel)]="form.escalationHours" placeholder="72" min="1">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="cancel()">Annuler</button>
+        <button class="btn-primary" (click)="save()">{{ editingId ? 'Modifier' : 'Créer' }}</button>
+      </div>
+    </div>
+  </div>
+</div>

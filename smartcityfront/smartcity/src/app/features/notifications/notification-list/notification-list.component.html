@@ -1,0 +1,33 @@
+<div class="notifications-page">
+  <header>
+    <h1><mat-icon>notifications</mat-icon> Notifications</h1>
+    <button class="btn-mark-all" (click)="markAllAsRead()" *ngIf="notifications.length > 0">
+      <mat-icon>done_all</mat-icon> Tout marquer lu
+    </button>
+  </header>
+
+  <div class="filter-bar">
+    <button [class.active]="filter === 'all'" (click)="filter = 'all'">Toutes</button>
+    <button [class.active]="filter === 'unread'" (click)="filter = 'unread'">Non lues</button>
+    <button [class.active]="filter === 'read'" (click)="filter = 'read'">Lues</button>
+  </div>
+
+  <div class="notification-list">
+    <div class="notification-item" *ngFor="let n of filteredNotifications"
+         [class.unread]="!n.read" (click)="markAsRead(n)">
+      <div class="notif-icon" [style.background]="getColor(n.type) + '20'" [style.color]="getColor(n.type)">
+        <mat-icon>{{ getIcon(n.type) }}</mat-icon>
+      </div>
+      <div class="notif-content">
+        <p class="notif-message">{{ n.message }}</p>
+        <span class="notif-time">{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+      <div class="unread-dot" *ngIf="!n.read"></div>
+    </div>
+
+    <div class="empty-state" *ngIf="filteredNotifications.length === 0">
+      <mat-icon>notifications_off</mat-icon>
+      <p>Aucune notification</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+# IDE
+.idea/
+.vscode/
+.project
+.classpath
+.settings/
+*.launch
+*.sublime-workspace
+.c9/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Spring Boot
+**/target/
+**/uploads/
+**/*.class
+
+# Angular / Node
+**/node_modules/
+**/dist/
+**/.angular/
