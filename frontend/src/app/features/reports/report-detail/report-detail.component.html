@@ -1,0 +1,156 @@
+<div class="page-container" *ngIf="report">
+  <mat-card class="detail-card">
+    <div class="card-header">
+      <div class="title-row">
+        <h1>{{ report.title }}</h1>
+        <span class="status-badge {{ report.status }}">
+          {{ report.status === 'PENDING' ? 'En attente' : report.status === 'IN_PROGRESS' ? 'En cours' : report.status === 'RESOLVED' ? 'Résolu' : 'Rejeté' }}
+        </span>
+      </div>
+      <div class="subtitle">
+        <mat-icon>person</mat-icon>
+        <span>Signalé par {{ report.citizenName }}</span>
+        <span style="margin:0 4px;color:var(--border);">|</span>
+        <mat-icon>schedule</mat-icon>
+        <span>{{ report.createdAt | date:'dd MMM yyyy, HH:mm' }}</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="sla-section" *ngIf="report.slaDeadline">
+        <div class="sla-header">
+          <mat-icon [style.color]="getSlaColor()">timer</mat-icon>
+          <span class="sla-label" [style.color]="getSlaColor()">{{ getSlaStatusText() }}</span>
+          <span class="sla-badge breached" *ngIf="report.slaBreached">EN RETARD</span>
+        </div>
+        <div class="sla-bar">
+          <div class="sla-fill" [style.width]="getSlaPercentage() + '%'" [style.background]="getSlaColor()"></div>
+        </div>
+        <div class="sla-info">
+          <span>Deadline : {{ report.slaDeadline | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span *ngIf="report.resolvedAt">Résolu le : {{ report.resolvedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+
+      <p class="description-text">{{ report.description }}</p>
+
+      <div class="vote-section" *ngIf="isCitizen">
+        <button class="vote-btn" [class.active]="report.likedByMe" (click)="toggleVote('LIKE')">
+          <span class="vote-icon">👍</span>
+          <span class="vote-count">{{ report.likeCount || 0 }}</span>
+          <span class="vote-label">J'aime</span>
+        </button>
+        <button class="vote-btn confirm" [class.active]="report.confirmedByMe" (click)="toggleVote('CONFIRM')">
+          <span class="vote-icon">👍</span>
+          <span class="vote-count">{{ report.confirmCount || 0 }}</span>
+          <span class="vote-label">Confirmer</span>
+        </button>
+      </div>
+
+      <div class="vote-counts" *ngIf="!isCitizen">
+        <div class="count-item" *ngIf="report.likeCount">
+          <span>👍 {{ report.likeCount }} J'aime</span>
+        </div>
+        <div class="count-item" *ngIf="report.confirmCount">
+          <span>👍 {{ report.confirmCount }} Confirmations</span>
+        </div>
+      </div>
+
+      <div class="photo-gallery" *ngIf="getAllPhotoUrls().length > 0">
+        <h3><mat-icon>photo_library</mat-icon> Photos</h3>
+        <div class="gallery-scroll">
+          <div class="gallery-item" *ngFor="let url of getAllPhotoUrls()">
+            <img [src]="'/api/upload/' + url" alt="Photo du signalement">
+          </div>
+        </div>
+      </div>
+
+      <div class="video-section" *ngIf="report.videoUrl">
+        <h3><mat-icon>videocam</mat-icon> Vidéo</h3>
+        <video [src]="'/api/upload/' + report.videoUrl" controls class="video-player"></video>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item"><span class="label">Catégorie</span><span class="value">{{ report.categoryName || 'Non classé' }}</span></div>
+        <div class="info-item"><span class="label">Priorité</span><span class="value priority-badge" [class.critical]="report.priority === 'CRITICAL'" [class.high]="report.priority === 'HIGH'" [class.medium]="report.priority === 'MEDIUM'">{{ getPriorityLabel(report.priority) }}</span></div>
+        <div class="info-item"><span class="label">Adresse</span><span class="value">{{ report.address || 'Non spécifiée' }}</span></div>
+        <div class="info-item" *ngIf="report.latitude"><span class="label">Coordonnées</span><span class="value">{{ report.latitude | number:'1.4f' }}, {{ report.longitude | number:'1.4f' }}</span></div>
+        <div class="info-item"><span class="label">Statut</span><span class="value">{{ report.status === 'PENDING' ? 'En attente' : report.status === 'IN_PROGRESS' ? 'En cours' : report.status === 'RESOLVED' ? 'Résolu' : 'Rejeté' }}</span></div>
+        <div class="info-item"><span class="label">Mise à jour</span><span class="value">{{ (report.updatedAt || report.createdAt) | date:'dd MMM yyyy' }}</span></div>
+      </div>
+
+      <div class="duplicate-warning" *ngIf="duplicates.length > 0">
+        <div class="title"><mat-icon>warning_amber</mat-icon> Doublons détectés par l'IA</div>
+        <div class="item" *ngFor="let d of duplicates">
+          <a [routerLink]="['/reports', d.reportId]">{{ d.title }}</a>
+          <span class="similarity">{{ d.similarity | percent:'1.0' }} de similarité</span>
+        </div>
+      </div>
+
+      <div class="intervention-section" *ngIf="report.agentComment || report.photoBefore || report.photoAfter">
+        <h3><mat-icon>build</mat-icon> Intervention</h3>
+        <p *ngIf="report.agentComment">{{ report.agentComment }}</p>
+        <div class="intervention-photos" *ngIf="report.photoBefore || report.photoAfter">
+          <div class="intervention-photo" *ngIf="report.photoBefore">
+            <span class="photo-label">Avant</span>
+            <img [src]="'/api/upload/' + report.photoBefore" alt="Avant">
+          </div>
+          <div class="intervention-photo" *ngIf="report.photoAfter">
+            <span class="photo-label">Après</span>
+            <img [src]="'/api/upload/' + report.photoAfter" alt="Après">
+          </div>
+        </div>
+      </div>
+
+      <div class="proof-section" *ngIf="report.proofPhoto">
+        <h3><mat-icon>verified</mat-icon> Photo preuve agent</h3>
+        <img [src]="'/api/upload/' + report.proofPhoto" alt="Preuve" class="proof-photo">
+      </div>
+
+      <div class="comments-section">
+        <h3><mat-icon>comment</mat-icon> Commentaires ({{ report.commentCount || 0 }})</h3>
+
+        <div class="comment-input" *ngIf="isCitizen || isAgent || isAdmin">
+          <mat-form-field appearance="outline" class="comment-field">
+            <mat-label>Ajouter un commentaire</mat-label>
+            <textarea matInput rows="2" [(ngModel)]="newComment" placeholder="Votre commentaire..."></textarea>
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="addComment()" [disabled]="!newComment.trim()">
+            <mat-icon>send</mat-icon> Envoyer
+          </button>
+        </div>
+
+        <div class="comment-list" *ngIf="comments.length > 0">
+          <div class="comment-item" *ngFor="let c of comments">
+            <div class="comment-header">
+              <div class="comment-avatar">{{ c.userName?.charAt(0) }}</div>
+              <span class="comment-author">{{ c.userName }}</span>
+              <span class="comment-date">{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <p class="comment-text">{{ c.content }}</p>
+          </div>
+        </div>
+
+        <div class="no-comments" *ngIf="comments.length === 0">
+          <mat-icon>chat_bubble_outline</mat-icon>
+          <p>Aucun commentaire pour le moment</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="updateStatus('IN_PROGRESS')" *ngIf="isAdmin && report.status === 'PENDING'">
+        <mat-icon>play_arrow</mat-icon> Prendre en charge
+      </button>
+      <button mat-raised-button style="background:#43a047;color:white;" (click)="resolve()" *ngIf="isAgent && report.status !== 'RESOLVED' && report.status !== 'REJECTED'">
+        <mat-icon>check_circle</mat-icon> Marquer résolu
+      </button>
+      <button mat-raised-button style="background:#2196f3;color:white;" (click)="validate()" *ngIf="isAdmin && report.status === 'RESOLVED'">
+        <mat-icon>verified</mat-icon> Valider
+      </button>
+      <button mat-raised-button color="warn" (click)="delete()" *ngIf="isAdmin">
+        <mat-icon>delete</mat-icon> Supprimer
+      </button>
+    </div>
+  </mat-card>
+</div>

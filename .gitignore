@@ -24,3 +24,6 @@ Thumbs.db
 **/node_modules/
 **/dist/
 **/.angular/
+
+# Legacy (moved to frontend/)
+smartcityfront/
