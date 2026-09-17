@@ -44,7 +44,8 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy {
   }
 
   private async initMap(): Promise<void> {
-    const L = await import('leaflet');
+    const leaflet = await import('leaflet') as any;
+    const L = leaflet.default || leaflet;
 
     this.map = L.map('map-picker', {
       center: [this.initialLat, this.initialLng],
@@ -92,7 +93,7 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy {
       debounceTime(600),
       switchMap(query => this.geocode(query))
     ).subscribe(results => {
-      if (results.length > 0) {
+      if (results.length > 0 && this.marker && this.map) {
         const first = results[0];
         this.latitude = parseFloat(first.lat);
         this.longitude = parseFloat(first.lon);

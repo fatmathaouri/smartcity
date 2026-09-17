@@ -85,7 +85,12 @@ public class ReportService {
     @Transactional
     public Report createReport(ReportDto dto, Long userId) {
         Citizen citizen = citizenRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Citizen not found"));
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId).orElseThrow();
+                    Citizen newCitizen = new Citizen();
+                    newCitizen.setUser(user);
+                    return citizenRepository.save(newCitizen);
+                });
 
         Category category = null;
         if (dto.getCategoryId() != null) {
