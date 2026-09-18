@@ -1,1 +1,14 @@
+name: cicd
 
+on:
+  push:
+    branches:
+      - workflow
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code source
+        uses: actions/checkout@v6
