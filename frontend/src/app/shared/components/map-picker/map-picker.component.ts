@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, Output, EventEmitter, Inpu
 import { isPlatformBrowser } from '@angular/common';
 import { Subject, debounceTime, switchMap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-map-picker',
@@ -43,10 +44,7 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private async initMap(): Promise<void> {
-    const leaflet = await import('leaflet') as any;
-    const L = leaflet.default || leaflet;
-
+  private initMap(): void {
     this.map = L.map('map-picker', {
       center: [this.initialLat, this.initialLng],
       zoom: 13,
@@ -78,6 +76,9 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy {
     });
 
     this.map.on('click', (e: any) => {
+      if (!this.marker || !this.map) {
+        return;
+      }
       const { lat, lng } = e.latlng;
       this.latitude = Math.round(lat * 100000) / 100000;
       this.longitude = Math.round(lng * 100000) / 100000;

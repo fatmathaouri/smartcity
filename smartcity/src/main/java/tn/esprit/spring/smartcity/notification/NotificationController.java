@@ -26,7 +26,7 @@ public class NotificationController {
         User user = getCurrentUser(authentication);
         List<Notification> notifications = new ArrayList<>();
 
-        citizenRepository.findByUserId(user.getId()).ifPresent(citizen ->
+        citizenRepository.findFirstByUserIdOrderByIdDesc(user.getId()).ifPresent(citizen ->
                 notifications.addAll(notificationService.getNotificationsByCitizenId(citizen.getId())));
 
         notifications.addAll(notificationService.getNotificationsByUserId(user.getId()));
@@ -40,7 +40,7 @@ public class NotificationController {
         User user = getCurrentUser(authentication);
         List<Notification> notifications = new ArrayList<>();
 
-        citizenRepository.findByUserId(user.getId()).ifPresent(citizen ->
+        citizenRepository.findFirstByUserIdOrderByIdDesc(user.getId()).ifPresent(citizen ->
                 notifications.addAll(notificationService.getUnreadNotifications(citizen.getId())));
 
         notifications.addAll(notificationService.getUnreadNotificationsByUserId(user.getId()));
@@ -54,7 +54,7 @@ public class NotificationController {
         User user = getCurrentUser(authentication);
         long count = notificationService.getUnreadCountByUserId(user.getId());
 
-        var citizenCount = citizenRepository.findByUserId(user.getId())
+        var citizenCount = citizenRepository.findFirstByUserIdOrderByIdDesc(user.getId())
                 .map(citizen -> notificationService.getUnreadCount(citizen.getId()))
                 .orElse(0L);
 
@@ -70,7 +70,7 @@ public class NotificationController {
     @PutMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead(Authentication authentication) {
         User user = getCurrentUser(authentication);
-        citizenRepository.findByUserId(user.getId()).ifPresent(citizen ->
+        citizenRepository.findFirstByUserIdOrderByIdDesc(user.getId()).ifPresent(citizen ->
                 notificationService.markAllAsRead(citizen.getId()));
         notificationService.markAllAsReadForUser(user.getId());
         return ResponseEntity.ok().build();

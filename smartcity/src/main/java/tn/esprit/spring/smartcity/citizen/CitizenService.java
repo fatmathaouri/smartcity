@@ -13,14 +13,14 @@ public class CitizenService {
     private final UserRepository userRepository;
 
     public Citizen getCitizenByUserId(Long userId) {
-        return citizenRepository.findByUserId(userId)
+        return citizenRepository.findFirstByUserIdOrderByIdDesc(userId)
                 .orElseThrow(() -> new RuntimeException("Citizen not found"));
     }
 
     public Citizen getCitizenByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return citizenRepository.findByUserId(user.getId())
+        return citizenRepository.findFirstByUserIdOrderByIdDesc(user.getId())
                 .orElseThrow(() -> new RuntimeException("Citizen not found"));
     }
 

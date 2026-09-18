@@ -66,7 +66,7 @@ public class ChatbotService {
 
     private String handleStatutQuery(Long userId) {
         if (userId == null) return "Connectez-vous pour vérifier vos signalements.";
-        Citizen citizen = citizenRepository.findByUserId(userId).orElse(null);
+        Citizen citizen = citizenRepository.findFirstByUserIdOrderByIdDesc(userId).orElse(null);
         if (citizen == null) return "Profil citoyen introuvable.";
         List<Report> reports = reportRepository.findByCitizenId(citizen.getId());
         if (reports.isEmpty()) return "Vous n'avez aucun signalement.";

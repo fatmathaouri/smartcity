@@ -84,7 +84,7 @@ public class GamificationService {
 
     private void checkBadges(Long userId, CitizenScore score) {
         List<Badge> allBadges = badgeRepository.findAll();
-        citizenRepository.findByUserId(userId).ifPresent(citizen -> {
+        citizenRepository.findFirstByUserIdOrderByIdDesc(userId).ifPresent(citizen -> {
             for (Badge badge : allBadges) {
                 if (!userBadgeRepository.existsByUserIdAndBadgeId(userId, badge.getId())
                         && score.getPoints() >= badge.getThresholdPoints()) {

@@ -148,7 +148,7 @@ public class AdminService {
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        citizenRepository.findByUserId(userId).ifPresent(e -> citizenRepository.delete(e));
+        citizenRepository.findFirstByUserIdOrderByIdDesc(userId).ifPresent(e -> citizenRepository.delete(e));
         agentRepository.findByUserId(userId).ifPresent(e -> agentRepository.delete(e));
         managerRepository.findByUserId(userId).ifPresent(e -> managerRepository.delete(e));
         userRepository.delete(user);

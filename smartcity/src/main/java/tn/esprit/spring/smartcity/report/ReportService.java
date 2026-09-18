@@ -84,7 +84,7 @@ public class ReportService {
 
     @Transactional
     public Report createReport(ReportDto dto, Long userId) {
-        Citizen citizen = citizenRepository.findByUserId(userId)
+        Citizen citizen = citizenRepository.findFirstByUserIdOrderByIdDesc(userId)
                 .orElseGet(() -> {
                     User user = userRepository.findById(userId).orElseThrow();
                     Citizen newCitizen = new Citizen();
