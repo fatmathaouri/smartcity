@@ -2,8 +2,7 @@ name: cicd
 
 on:
   push:
-    branches:
-      - workflow
+    branches: workflow
 
 jobs:
   build-and-deploy:
