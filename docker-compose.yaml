@@ -19,6 +19,7 @@ services:
 
   backend:
     build: ./smartcity
+    image: fatmathaouri/smartcity-backend:latest
     container_name: smartcity-backend
     ports:
       - "8081:8081"
@@ -37,6 +38,7 @@ services:
 
   frontend:
     build: ./frontend
+    image: fatmathaouri/smartcity-frontend:latest
     container_name: smartcity-frontend
     ports:
       - "80:80"
