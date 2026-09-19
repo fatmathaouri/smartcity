@@ -2,7 +2,6 @@ pipeline {
   agent any
 
   tools {
-    jdk 'jdk-17'
     maven 'maven'
     nodejs 'node'
   }
@@ -15,18 +14,6 @@ pipeline {
   }
 
   stages {
-    stage ("clean up") {
-      steps {
-        deleteDir()
-      }
-    }
-
-    stage ("clone repo") {
-      steps {
-        sh "git clone https://github.com/fatmathaouri/smartcity.git"
-      }
-    }
-
     stage ("backend tests") {
       steps {
         sh '''
@@ -52,14 +39,14 @@ pipeline {
 
     stage ("frontend tests") {
       steps {
-        sh "cd smartcity/frontend && npm ci"
-        sh "cd smartcity/frontend && npm test -- --watch=false --browsers=ChromeHeadless"
+        sh "cd frontend && npm ci"
+        sh "cd frontend && npm test -- --watch=false --browsers=ChromeHeadless"
       }
     }
 
     stage ("frontend build") {
       steps {
-        sh "cd smartcity/frontend && npm run build -- --configuration production"
+        sh "cd frontend && npm run build -- --configuration production"
       }
     }
 
@@ -72,7 +59,6 @@ pipeline {
         )]) {
           sh '''
             echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
-            cd smartcity
             docker compose config
             docker compose build
             docker compose push backend frontend
@@ -85,7 +71,6 @@ pipeline {
     stage ("docker deploy") {
       steps {
         sh '''
-          cd smartcity
           docker compose pull
           docker compose down || true
           docker compose up -d
