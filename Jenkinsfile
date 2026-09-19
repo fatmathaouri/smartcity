@@ -3,8 +3,8 @@ pipeline {
 
   tools {
     jdk 'jdk-17'
-    maven 'maven-3'
-    nodejs 'node-18'
+    maven 'maven'
+    nodejs 'node'
   }
 
   environment {
