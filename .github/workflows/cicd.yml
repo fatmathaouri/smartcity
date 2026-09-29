@@ -46,7 +46,21 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/smartcity?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: root
-        run: bash mvnw test --batch-mode
+        run: bash mvnw verify --batch-mode
+
+      - name: Analyse SonarQube backend
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        working-directory: smartcity
+        run: >-
+          bash mvnw sonar:sonar
+          -Dsonar.host.url="$SONAR_HOST_URL"
+          -Dsonar.token="$SONAR_TOKEN"
+          -Dsonar.projectKey=smartcity-backend
+          -Dsonar.projectName="SmartCity Backend"
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.qualitygate.wait=false
 
   frontend:
     name: Frontend build and tests
@@ -69,11 +83,25 @@ jobs:
 
       - name: Run frontend tests
         working-directory: frontend
-        run: npm test -- --watch=false --browsers=ChromeHeadless
+        run: npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
 
       - name: Build frontend
         working-directory: frontend
         run: npm run build -- --configuration production
+
+      - name: Analyse SonarQube frontend
+        uses: SonarSource/sonarqube-scan-action@v8.2.2
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: frontend
+          args: >-
+            -Dsonar.projectKey=smartcity-frontend
+            -Dsonar.projectName="SmartCity Frontend"
+            -Dsonar.sources=src
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
 
   docker:
     name: Build and push Docker images
