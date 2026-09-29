@@ -27,3 +27,7 @@ Thumbs.db
 
 # Legacy (moved to frontend/)
 smartcityfront/
+
+# SonarQube
+**/.scannerwork/
+**/coverage/
