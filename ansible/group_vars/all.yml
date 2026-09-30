@@ -1,0 +1,20 @@
+---
+# Déploiement SmartCity
+smartcity_repo: "https://github.com/fatmathaouri/smartcity.git"
+smartcity_deploy_dir: /home/ubuntu/smartcity
+smartcity_branch: master
+compose_file: docker-compose.prod.yaml
+
+# Rôle common
+vm_max_map_count: 262144
+swap_size_mb: 2048
+
+# Rôle maintenance — MySQL via docker exec (le port 3306 est fermé sur l'hôte)
+backup_dir: /home/ubuntu/backups
+backup_script: /home/ubuntu/bin/backup-mysql.sh
+backup_keep_days: 7
+backup_cron_hour: 3
+backup_cron_minute: 0
+backup_log: /home/ubuntu/backup.log
+# Déjà en clair dans docker-compose.yaml du dépôt public — Phase F : passer en variable d'env
+mysql_root_password: "root"

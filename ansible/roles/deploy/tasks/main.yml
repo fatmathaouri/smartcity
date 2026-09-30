@@ -1,0 +1,25 @@
+---
+- name: "Cloner ou mettre à jour le dépôt ({{ smartcity_branch }})"
+  ansible.builtin.git:
+    repo: "{{ smartcity_repo }}"
+    dest: "{{ smartcity_deploy_dir }}"
+    version: "{{ smartcity_branch }}"
+    update: true
+    force: false
+  become: false
+
+- name: "Pull des images ({{ compose_file }})"
+  ansible.builtin.command: docker compose -f {{ compose_file }} pull
+  args:
+    chdir: "{{ smartcity_deploy_dir }}"
+  register: compose_pull
+  changed_when: "'Downloaded newer image' in (compose_pull.stdout ~ compose_pull.stderr)"
+
+- name: "Démarrer / mettre à jour les conteneurs ({{ compose_file }})"
+  ansible.builtin.command: docker compose -f {{ compose_file }} up -d
+  args:
+    chdir: "{{ smartcity_deploy_dir }}"
+  register: compose_up
+  changed_when: >-
+    'Recreated' in compose_up.stdout or 'Created' in compose_up.stdout
+    or 'Started' in compose_up.stdout or 'Removed' in compose_up.stdout

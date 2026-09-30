@@ -1,0 +1,9 @@
+---
+- name: Provisionner et déployer le VPS SmartCity
+  hosts: servers
+  become: true
+  roles:
+    - common
+    - docker
+    - deploy
+    - maintenance
