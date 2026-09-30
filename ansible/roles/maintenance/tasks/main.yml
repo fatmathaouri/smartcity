@@ -1,0 +1,42 @@
+---
+- name: Dossier des backups
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+
+- name: Dossier des scripts
+  ansible.builtin.file:
+    path: "{{ backup_script | dirname }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+
+- name: Script de backup MySQL
+  ansible.builtin.copy:
+    dest: "{{ backup_script }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0750"
+    content: |
+      #!/bin/bash
+      # Généré par Ansible (rôle maintenance) — backup MySQL SmartCity via docker exec
+      # (le port 3306 est fermé sur l'hôte)
+      set -euo pipefail
+      TS="$(date +%Y-%m-%d_%H%M)"
+      OUT="{{ backup_dir }}/smartcity_${TS}.sql.gz"
+      trap 'rm -f "$OUT"; echo "[$(date "+%F %T")] backup ECHEC -> $OUT" >> {{ backup_log }}' ERR
+      docker exec smartcity-mysql mysqldump -uroot -p"{{ mysql_root_password }}" smartcity | gzip > "$OUT"
+      echo "[$(date "+%F %T")] backup OK -> $OUT" >> {{ backup_log }}
+      find {{ backup_dir }} -name 'smartcity_*.sql.gz' -mtime +{{ backup_keep_days }} -delete
+
+- name: "Cron backup quotidien ({{ backup_cron_hour }}:{{ '%02d' | format(backup_cron_minute) }})"
+  ansible.builtin.cron:
+    name: smartcity backup mysql
+    user: ubuntu
+    minute: "{{ backup_cron_minute }}"
+    hour: "{{ backup_cron_hour }}"
+    job: "{{ backup_script }} >> {{ backup_log }} 2>&1"

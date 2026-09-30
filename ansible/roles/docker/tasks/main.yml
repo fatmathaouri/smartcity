@@ -1,0 +1,28 @@
+---
+- name: Vérifier Docker + plugin compose
+  ansible.builtin.command: docker compose version
+  register: docker_check
+  changed_when: false
+  failed_when: false
+
+- name: Installer Docker Engine et le plugin compose
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: docker_check.rc != 0
+
+- name: Service docker actif et démarré au boot
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Utilisateur ubuntu dans le groupe docker
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+    append: true

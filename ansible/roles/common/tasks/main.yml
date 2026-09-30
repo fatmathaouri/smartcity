@@ -1,0 +1,39 @@
+---
+- name: Vérifier python3-apt (requis par le module apt)
+  ansible.builtin.raw: dpkg -s python3-apt
+  register: python3_apt_check
+  changed_when: false
+  failed_when: false
+
+- name: Installer python3-apt si absent
+  ansible.builtin.raw: apt-get install -y python3-apt
+  when: python3_apt_check.rc != 0
+
+- name: Paquets de base (curl, git, ca-certificates)
+  ansible.builtin.apt:
+    name:
+      - curl
+      - git
+      - ca-certificates
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: sysctl vm.max_map_count (Docker / SonarQube)
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-smartcity.conf
+    content: "vm.max_map_count={{ vm_max_map_count }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Recharger sysctl
+
+- name: "Swap {{ swap_size_mb }} Mo"
+  ansible.builtin.shell: |
+    set -e
+    fallocate -l {{ swap_size_mb }}M /swapfile
+    chmod 600 /swapfile
+    swapon /swapfile
+    grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  args:
+    creates: /swapfile
