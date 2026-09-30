@@ -13,7 +13,9 @@
   args:
     chdir: "{{ smartcity_deploy_dir }}"
   register: compose_pull
-  changed_when: "'Downloaded newer image' in (compose_pull.stdout ~ compose_pull.stderr)"
+  changed_when: >-
+    'Downloaded newer image' in (compose_pull.stdout ~ compose_pull.stderr)
+    or 'Pull complete' in (compose_pull.stdout ~ compose_pull.stderr)
 
 - name: "Démarrer / mettre à jour les conteneurs ({{ compose_file }})"
   ansible.builtin.command: docker compose -f {{ compose_file }} up -d
@@ -21,5 +23,7 @@
     chdir: "{{ smartcity_deploy_dir }}"
   register: compose_up
   changed_when: >-
-    'Recreated' in compose_up.stdout or 'Created' in compose_up.stdout
-    or 'Started' in compose_up.stdout or 'Removed' in compose_up.stdout
+    'Recreated' in (compose_up.stdout ~ compose_up.stderr)
+    or 'Created' in (compose_up.stdout ~ compose_up.stderr)
+    or 'Started' in (compose_up.stdout ~ compose_up.stderr)
+    or 'Removed' in (compose_up.stdout ~ compose_up.stderr)
