@@ -32,8 +32,9 @@
 - name: "Swap {{ swap_size_mb }} Mo"
   ansible.builtin.shell: |
     set -e
-    fallocate -l {{ swap_size_mb }}M /swapfile
+    dd if=/dev/zero of=/swapfile bs=1M count={{ swap_size_mb }} status=none
     chmod 600 /swapfile
+    mkswap /swapfile
     swapon /swapfile
     grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
   args:
