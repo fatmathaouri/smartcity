@@ -14,17 +14,21 @@ spec:
           alertmanager:
             enabled: false
           grafana:
+            adminPassword: GrafanaLab2026
             resources:
               requests:
                 cpu: 100m
                 memory: 128Mi
               limits:
                 cpu: 250m
-                memory: 256Mi
+                memory: 512Mi
             persistence:
               enabled: true
               storageClassName: local-path
               size: 512Mi
+            ini:
+              plugins:
+                autoInstallApps: false
           prometheus:
             prometheusSpec:
               retention: 5d
