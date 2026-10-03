@@ -48,17 +48,17 @@ spec:
                     resources:
                       requests:
                         storage: 5Gi
-              additionalServiceMonitors:
-                - name: ingress-nginx-metrics
-                  namespaceSelector:
-                    matchNames:
-                      - ingress-nginx
-                  selector:
-                    matchLabels:
-                      app: ingress-nginx-metrics
-                  endpoints:
-                    - port: metrics
-                      interval: 30s
+            additionalServiceMonitors:
+              - name: ingress-nginx-metrics
+                namespaceSelector:
+                  matchNames:
+                    - ingress-nginx
+                selector:
+                  matchLabels:
+                    app: ingress-nginx-metrics
+                endpoints:
+                  - port: metrics
+                    interval: 30s
           kubeEtcd:
             enabled: false
           kubeControllerManager:
